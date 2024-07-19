@@ -41,7 +41,9 @@ function ActivityForm({ activity, onClose, onSave, onDelete }) {
   };
 
   const handleDelete = () => {
-    onDelete(localActivity.id);
+    if (activity && activity.id) {
+      onDelete(activity.id);
+    }
     onClose();
   };
 
