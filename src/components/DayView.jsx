@@ -23,13 +23,13 @@
 
 //   const addActivity = (activity) => {
 //     const newActivity = { ...activity, id: Date.now(), assigned: newActivityList === 'overview-activities' };
-    
+
 //     if (newActivityList === 'overview-activities') {
 //       setActivities([...activities, newActivity]);
 //     } else {
 //       setUnassignedActivities([...unassignedActivities, newActivity]);
 //     }
-    
+
 //     setFormVisible(false);
 //   };
 
@@ -170,11 +170,10 @@
 
 // export default DayView;
 
-
-import React, { useState, useEffect } from 'react';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import 'tailwindcss/tailwind.css';
-import ActivityForm from './ActivityForm';
+import React, { useState, useEffect } from "react";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import "tailwindcss/tailwind.css";
+import ActivityForm from "./ActivityForm";
 
 const DayView = () => {
   const [activities, setActivities] = useState([]);
@@ -183,38 +182,87 @@ const DayView = () => {
   const [isFormVisible, setFormVisible] = useState(false);
   const [currentList, setCurrentList] = useState(null);
 
-  useEffect(() => {
-    const savedActivities = JSON.parse(localStorage.getItem('activities')) || [];
-    setActivities(savedActivities.filter(activity => activity.assigned));
-    setUnassignedActivities(savedActivities.filter(activity => !activity.assigned));
-  }, []);
+  const [activitiesBasedOnDates, setActivitiesBasedOnDates] = useState({});
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [index, setIndex] = useState(0);
 
   useEffect(() => {
-    const allActivities = [...activities, ...unassignedActivities];
-    localStorage.setItem('activities', JSON.stringify(allActivities));
-  }, [activities, unassignedActivities]);
+    const savedActivities =
+      JSON.parse(localStorage.getItem("activities")) || [];
+
+    let tempActivitiesBasedOnDates = {};
+
+    savedActivities.map((act) => {
+      if (!tempActivitiesBasedOnDates[act.date]) {
+        tempActivitiesBasedOnDates[act.date] = [];
+      }
+      tempActivitiesBasedOnDates[act.date].push(act);
+    });
+
+    setActivitiesBasedOnDates(tempActivitiesBasedOnDates);
+  },[]);
+
+  useEffect(() => {
+    setSelectedDate(Object.keys(activitiesBasedOnDates)[index]);
+  }, [index, activitiesBasedOnDates]);
+
+  useEffect(() => {
+    if (Object.keys(activitiesBasedOnDates).length > 0 && selectedDate) {
+      setActivities(
+        activitiesBasedOnDates[selectedDate].filter(
+          (activity) => activity.assigned
+        )
+      );
+      setUnassignedActivities(
+        activitiesBasedOnDates[selectedDate].filter(
+          (activity) => !activity.assigned
+        )
+      );
+    }
+  }, [activitiesBasedOnDates, selectedDate]);
+
+  // useEffect(() => {
+  //   const allActivities = [...activities, ...unassignedActivities];
+  //   localStorage.setItem("activities", JSON.stringify(allActivities));
+  // }, [activities, unassignedActivities]);
 
   const addActivity = (activity) => {
-    if (currentList === 'overview-activities') {
-      setActivities([...activities, { ...activity, id: Date.now(), assigned: true }]);
+    if (currentList === "overview-activities") {
+      setActivities([
+        ...activities,
+        { ...activity, id: Date.now(), assigned: true },
+      ]);
     } else {
-      setUnassignedActivities([...unassignedActivities, { ...activity, id: Date.now(), assigned: false }]);
+      setUnassignedActivities([
+        ...unassignedActivities,
+        { ...activity, id: Date.now(), assigned: false },
+      ]);
     }
     setFormVisible(false);
   };
 
   const updateActivity = (updatedActivity) => {
     if (updatedActivity.assigned) {
-      setActivities(activities.map(activity => activity.id === updatedActivity.id ? updatedActivity : activity));
+      setActivities(
+        activities.map((activity) =>
+          activity.id === updatedActivity.id ? updatedActivity : activity
+        )
+      );
     } else {
-      setUnassignedActivities(unassignedActivities.map(activity => activity.id === updatedActivity.id ? updatedActivity : activity));
+      setUnassignedActivities(
+        unassignedActivities.map((activity) =>
+          activity.id === updatedActivity.id ? updatedActivity : activity
+        )
+      );
     }
     setFormVisible(false);
   };
 
   const deleteActivity = (id) => {
-    setActivities(activities.filter(activity => activity.id !== id));
-    setUnassignedActivities(unassignedActivities.filter(activity => activity.id !== id));
+    setActivities(activities.filter((activity) => activity.id !== id));
+    setUnassignedActivities(
+      unassignedActivities.filter((activity) => activity.id !== id)
+    );
     setFormVisible(false);
   };
 
@@ -223,19 +271,25 @@ const DayView = () => {
 
     const { source, destination } = result;
 
-    let sourceList = source.droppableId === 'overview-activities' ? activities : unassignedActivities;
-    let destinationList = destination.droppableId === 'overview-activities' ? activities : unassignedActivities;
+    let sourceList =
+      source.droppableId === "overview-activities"
+        ? activities
+        : unassignedActivities;
+    let destinationList =
+      destination.droppableId === "overview-activities"
+        ? activities
+        : unassignedActivities;
 
     const [movedItem] = sourceList.splice(source.index, 1);
     destinationList.splice(destination.index, 0, movedItem);
 
-    if (source.droppableId === 'overview-activities') {
+    if (source.droppableId === "overview-activities") {
       setActivities([...sourceList]);
     } else {
       setUnassignedActivities([...sourceList]);
     }
 
-    if (destination.droppableId === 'overview-activities') {
+    if (destination.droppableId === "overview-activities") {
       setActivities([...destinationList]);
     } else {
       setUnassignedActivities([...destinationList]);
@@ -259,10 +313,18 @@ const DayView = () => {
       <DragDropContext onDragEnd={onDragEnd}>
         <Droppable droppableId="overview-activities">
           {(provided) => (
-            <div ref={provided.innerRef} {...provided.droppableProps} className="p-4 bg-white rounded-lg shadow-md">
+            <div
+              ref={provided.innerRef}
+              {...provided.droppableProps}
+              className="p-4 bg-white rounded-lg shadow-md"
+            >
               <h2 className="text-lg font-semibold mb-4">Unassigned Task</h2>
               {activities.map((activity, index) => (
-                <Draggable key={activity.id} draggableId={String(activity.id)} index={index}>
+                <Draggable
+                  key={activity.id}
+                  draggableId={String(activity.id)}
+                  index={index}
+                >
                   {(provided) => (
                     <div
                       ref={provided.innerRef}
@@ -284,7 +346,7 @@ const DayView = () => {
               {provided.placeholder}
               <button
                 className="mt-4 py-2 px-4 bg-green-500 text-white rounded hover:bg-green-600"
-                onClick={() => handleAddClick('overview-activities')}
+                onClick={() => handleAddClick("overview-activities")}
               >
                 Add Activity
               </button>
@@ -294,10 +356,45 @@ const DayView = () => {
 
         <Droppable droppableId="unassigned-activities">
           {(provided) => (
-            <div ref={provided.innerRef} {...provided.droppableProps} className="p-4 bg-white rounded-lg shadow-md">
-              <h2 className="text-lg font-semibold mb-4">Overview</h2>
+            <div
+              ref={provided.innerRef}
+              {...provided.droppableProps}
+              className="p-4 bg-white rounded-lg shadow-md"
+            >
+              <div className="flex flex-row justify-between">
+                <h2 className="text-lg font-semibold mb-4">Overview</h2>
+                <div>
+                  <h1 className="font-semibold p-2 text-lg">
+                    <span
+                      onClick={() => {
+                        if (index > 0) {
+                          setIndex(index - 1);
+                        }
+                      }}
+                    >
+                      ←
+                    </span>
+                    {selectedDate}
+                    <span
+                      onClick={() => {
+                        if (
+                          index < Object.keys(activitiesBasedOnDates).length-1
+                        ) {
+                          setIndex(index + 1);
+                        }
+                      }}
+                    >
+                      →
+                    </span>
+                  </h1>
+                </div>
+              </div>
               {unassignedActivities.map((activity, index) => (
-                <Draggable key={activity.id} draggableId={String(activity.id)} index={index}>
+                <Draggable
+                  key={activity.id}
+                  draggableId={String(activity.id)}
+                  index={index}
+                >
                   {(provided) => (
                     <div
                       ref={provided.innerRef}
@@ -319,7 +416,7 @@ const DayView = () => {
               {provided.placeholder}
               <button
                 className="mt-4 py-2 px-4 bg-green-500 text-white rounded hover:bg-green-600"
-                onClick={() => handleAddClick('unassigned-activities')}
+                onClick={() => handleAddClick("unassigned-activities")}
               >
                 Add Activity
               </button>
