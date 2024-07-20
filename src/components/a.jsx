@@ -204,16 +204,11 @@ const DayView = () => {
   },[]);
 
   useEffect(() => {
-    if (Object.keys(activitiesBasedOnDates).length > 0) {
-      const sortedDates = Object.keys(activitiesBasedOnDates).sort(
-        (a, b) => new Date(a) - new Date(b)
-      );
-      setSelectedDate(sortedDates[index]);
-    }
+    setSelectedDate(Object.keys(activitiesBasedOnDates)[index]);
   }, [index, activitiesBasedOnDates]);
 
   useEffect(() => {
-    if (selectedDate && activitiesBasedOnDates[selectedDate]) {
+    if (Object.keys(activitiesBasedOnDates).length > 0 && selectedDate) {
       setActivities(
         activitiesBasedOnDates[selectedDate].filter(
           (activity) => activity.assigned
